@@ -14,23 +14,21 @@ var PanierListView = Backbone.View.extend({
     
     initialize: function() {
         _.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
-        pubSub.events.on('book:clicked', this.addBook, this);
+        //app.pubSub.events.on('book:clicked', this.addBook, this);
     },
     
-   render: function() {
+    render: function() {
         this.$el.find('#books-selected').empty();
 
         _.each(this.collection.models, this.renderBook, this);
 
-        pubSub.events.trigger('book:add', this.collection);
-
-        return this;
+        //app.pubSub.events.trigger('book:add', this.collection);
+        app.prixPanierView.processPrix(this.collection);
     },
      
     renderBook: function(book) {
         var html = this.template(book.toJSON());
         this.$el.find('#books-selected').append(html);
-        return this;
     },
     
     //If it doesn't exist, add selected book in PanierList collection, else increment its quantite

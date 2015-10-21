@@ -11,7 +11,7 @@ var PrixPanierView = Backbone.View.extend({
 
     initialize: function() {
         _.bindAll(this, 'render', 'processPrix');
-        pubSub.events.on('book:add', this.processPrix, this);
+        //app.pubSub.events.on('book:add', this.processPrix, this);
     },
 
     processPrix: function(collection) {

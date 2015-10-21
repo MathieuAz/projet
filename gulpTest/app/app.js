@@ -7,12 +7,16 @@ var $ = require('jquery'),
 
 
 (function(window, $, undefined) {
-	pubSub = new PubSub();
+
+	window.app = {};
+
+	app.pubSub = new PubSub();
 
 	AppController.init();
 	
 	//INSTANTIATE VIEWS
-	var bookListView = new BookListView();
-	var panierListView = new PanierListView();
-	var prixListView = new PrixPanierView();
+	app.bookListView = new BookListView();
+	app.panierListView = new PanierListView();
+	app.prixPanierView = new PrixPanierView();
+	
 })(window, $);
