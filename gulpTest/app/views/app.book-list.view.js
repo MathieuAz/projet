@@ -5,27 +5,29 @@ var Backbone = require('backbone'),
 
 
 var BookListView = Backbone.View.extend({
-    el: '#list',
-    collection: new BooksList(),
+	el: '#list',
+	collection: new BooksList(),
 
-    initialize: function() {
-        _.bindAll(this, 'render', 'processBook');
-        this.collection.fetch({
-            success: this.render
-        });
-    },
+	initialize: function() {
+		_.bindAll(this, 'render', 'processBook');
+		this.collection.fetch({
+			success: this.render
+		});
+	},
 
-    render: function() {
-        _.each(this.collection.models, this.processBook, this);
-        return this;
-    },
-    
-    //Each book instanciate a new book's view
-    processBook: function(book) {
-        var childBookItemView = new BookItemView({model: book});
-        childBookItemView.render();
-        this.$el.append(childBookItemView.el);
-    }
+	render: function() {
+		_.each(this.collection.models, this.processBook, this);
+		return this;
+	},
+
+	//Each book instanciate a new book's view
+	processBook: function(book) {
+		var childBookItemView = new BookItemView({
+			model: book
+		});
+		childBookItemView.render();
+		this.$el.append(childBookItemView.el);
+	}
 });
 
 module.exports = BookListView;
