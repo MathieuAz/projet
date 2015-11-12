@@ -18,24 +18,20 @@ var PanierListView = Backbone.View.extend({
 	},
 
 	render: function() {
-		this.$el.find('#books-selected').empty();
-
-		_.each(this.collection.models, this.renderBook, this);
+		this.renderBook(this.collection);
 
 		//app.pubSub.events.trigger('book:add', this.collection);
 		app.prixPanierView.processPrix(this.collection);
 	},
 
-	renderBook: function(book) {
-		var html = this.template(book.toJSON());
-		this.$el.find('#books-selected').append(html);
+	renderBook: function(books) {
+		var html = this.template(books.toJSON());
+		this.$el.find('#books-selected').html(html);
 	},
 
 	//If it doesn't exist, add selected book in PanierList collection, else increment its quantite
 	addBook: function(book) {
-		var modelExist = _.findWhere(this.collection.models, {
-			cid: book.cid
-		});
+		var modelExist = _.findWhere(this.collection.models, {cid: book.cid});
 
 		if (modelExist) {
 			modelExist.set('quantite', modelExist.get('quantite') + 1);
@@ -53,10 +49,10 @@ var PanierListView = Backbone.View.extend({
 		});
 
 		//Remove books in panier
-		this.collection.remove(this.collection.models);
+		//this.collection.remove(this.collection.models);
+		this.collection.reset();
 
-		this.$el.find('#books-selected, #prix-reduction').empty();
-		this.$el.find('#prix-total').html('0');
+		this.render();
 	}
 });
 

@@ -1,2 +1,4 @@
-<p>Prix total: <span id="prix-total">{{this.prixTotal}}</span>€</p>
-<p id="prix-reduction">Prix avec réduction: {{this.prixReduction}}€</p>
+<p>Prix total: {{prixTotal}}€</p>
+{{#if prixReduction}}
+	<p>Prix avec réduction: {{prixReduction}}€</p>
+{{/if}}

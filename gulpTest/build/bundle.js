@@ -1,23 +1,31 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var $ = require('jquery'),
+	Backbone = require('backbone'),
 	PubSub = require('./pubsub'),
-	AppController = require('./controllers/app.controller'),
+	Controller = require('./controllers/app.controller'),
 	BookListView = require('./views/app.book-list.view'),
 	PanierListView = require('./views/app.panier-list.view'),
 	PrixPanierView = require('./views/app.prix-panier.view');
 
 
 (function(window, $, undefined) {
-	pubSub = new PubSub();
+	if (window.__backboneAgent) {
+		window.__backboneAgent.handleBackbone(Backbone);
+	}
 
-	AppController.init();
-	
+	window.app = {};
+
+	app.pubSub = new PubSub();
+
+	app.controller = new Controller.init();
+
 	//INSTANTIATE VIEWS
-	var bookListView = new BookListView();
-	var panierListView = new PanierListView();
-	var prixListView = new PrixPanierView();
+	app.bookListView = new BookListView();
+	app.panierListView = new PanierListView();
+	app.prixPanierView = new PrixPanierView();
+
 })(window, $);
-},{"./controllers/app.controller":5,"./pubsub":7,"./views/app.book-list.view":9,"./views/app.panier-list.view":10,"./views/app.prix-panier.view":11,"jquery":36}],2:[function(require,module,exports){
+},{"./controllers/app.controller":5,"./pubsub":7,"./views/app.book-list.view":9,"./views/app.panier-list.view":10,"./views/app.prix-panier.view":11,"backbone":15,"jquery":36}],2:[function(require,module,exports){
 var Backbone = require('backbone'),
 	Book = require('../models/app.model');
 
@@ -45,44 +53,44 @@ module.exports = PanierPrix;
 },{"backbone":15}],5:[function(require,module,exports){
 var _ = require('underscore');
 
-var appController = (function() {
-    var controller = {};
+var Controller = (function() {
+	var controller = {};
 
-    // var display = _.bind(function() {
+	// var display = _.bind(function() {
 
-    //     this.layout = new this.Views.mesAlertes();
+	//     this.layout = new this.Views.mesAlertes();
 
-    //     this.alertesModel = new this.Models.mesAlertesModel();
+	//     this.alertesModel = new this.Models.mesAlertesModel();
 
-    // }, mesAlertes);
+	// }, mesAlertes);
 
-    // var success = _.bind(function() {
-    //     this.layout.model.set('alerteCree', true, {
-    //         silent: true
-    //     });
-    //     this.layout.render();
-    //     if (KV.storage.isAvailable()) {
-    //         KV.storage.setItem('AV-preventInit', true);
-    //     }
-    // }, mesAlertes);
+	// var success = _.bind(function() {
+	//     this.layout.model.set('alerteCree', true, {
+	//         silent: true
+	//     });
+	//     this.layout.render();
+	//     if (KV.storage.isAvailable()) {
+	//         KV.storage.setItem('AV-preventInit', true);
+	//     }
+	// }, mesAlertes);
 
-    var registerEvents = _.bind(function() {
-        // app.mediator.subscribe("maSelection: Views.maSelection: displayMaSelection", display);
-        // app.mediator.subscribe("mesAlertes: Views.mesAlertes: Success", success);
-    }, controller);
+	var registerEvents = _.bind(function() {
+		// app.mediator.subscribe("maSelection: Views.maSelection: displayMaSelection", display);
+		// app.mediator.subscribe("mesAlertes: Views.mesAlertes: Success", success);
+	}, controller);
 
-    /**
-     * [init mesAlertes]
-     */
-    controller.init = function() {
-        console.log("[Controller:init] initialisation de l'appli Henri Potier");
-        registerEvents();
-    };
+	/**
+	 * [init mesAlertes]
+	 */
+	controller.init = function() {
+		console.log("[Controller:init] initialisation de l'appli Henri Potier");
+		registerEvents();
+	};
 
-    return controller;
+	return controller;
 })();
 
-module.exports = appController;
+module.exports = Controller;
 },{"underscore":37}],6:[function(require,module,exports){
 var Backbone = require('backbone');
 
@@ -104,36 +112,35 @@ var PubSub = function() {
 module.exports = PubSub;
 },{"backbone":15,"underscore":37}],8:[function(require,module,exports){
 var Backbone = require('backbone'),
-    _ = require('underscore'),
-    $ = require('jquery'),
-    bookTemplate = require('./templates/book-template.hbs');
+	_ = require('underscore'),
+	bookTemplate = require('./templates/book-template.hbs');
 
 
 var BookItemView = Backbone.View.extend({
-    template: bookTemplate,
-    tagName: 'li',
-    
-    initialize: function() {
-        _.bindAll(this, 'render', 'publish');
-    },
+	template: bookTemplate,
+	tagName: 'li',
 
-    events: {
-        'click p': 'publish'
-    },
+	initialize: function() {
+		_.bindAll(this, 'render', 'publish');
+	},
 
-    render: function() {
-        var html = this.template(this.model.toJSON());
-        this.$el.html(html);
-        return this;
-    },
+	events: {
+		'click p, img': 'publish'
+	},
 
-    publish: function() {
-        pubSub.events.trigger('book:clicked', this.model);
-    }
+	render: function() {
+		var html = this.template(this.model.toJSON());
+		this.$el.html(html);
+	},
+
+	publish: function() {
+		//app.pubSub.events.trigger('book:clicked', this.model);
+		app.panierListView.addBook(this.model);
+	}
 });
 
 module.exports = BookItemView;
-},{"./templates/book-template.hbs":12,"backbone":15,"jquery":36,"underscore":37}],9:[function(require,module,exports){
+},{"./templates/book-template.hbs":12,"backbone":15,"underscore":37}],9:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	BooksList = require('../collections/app.book.collection'),
@@ -141,27 +148,29 @@ var Backbone = require('backbone'),
 
 
 var BookListView = Backbone.View.extend({
-    el: '#list',
-    collection: new BooksList(),
+	el: '#list',
+	collection: new BooksList(),
 
-    initialize: function() {
-        _.bindAll(this, 'render', 'processBook');
-        this.collection.fetch({
-            success: this.render
-        });
-    },
+	initialize: function() {
+		_.bindAll(this, 'render', 'processBook');
+		this.collection.fetch({
+			success: this.render
+		});
+	},
 
-    render: function() {
-        _.each(this.collection.models, this.processBook, this);
-        return this;
-    },
-    
-    //Each book instanciate a new book's view
-    processBook: function(book) {
-        var childBookItemView = new BookItemView({model: book});
-        childBookItemView.render();
-        this.$el.append(childBookItemView.el);
-    }
+	render: function() {
+		_.each(this.collection.models, this.processBook, this);
+		return this;
+	},
+
+	//Each book instanciate a new book's view
+	processBook: function(book) {
+		var childBookItemView = new BookItemView({
+			model: book
+		});
+		childBookItemView.render();
+		this.$el.append(childBookItemView.el);
+	}
 });
 
 module.exports = BookListView;
@@ -173,147 +182,157 @@ var Backbone = require('backbone'),
 
 
 var PanierListView = Backbone.View.extend({
-    el: '#panier',
-    template: panierTemplate,
-    collection: new PanierList(),
-    events: {
-        'click #vider-panier': 'cleanPanier'
-    },
-    
-    initialize: function() {
-        _.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
-        pubSub.events.on('book:clicked', this.addBook, this);
-    },
-    
-   render: function() {
-        this.$el.find('#books-selected').empty();
+	el: '#panier',
+	template: panierTemplate,
+	collection: new PanierList(),
+	events: {
+		'click #vider-panier': 'cleanPanier'
+	},
 
-        _.each(this.collection.models, this.renderBook, this);
+	initialize: function() {
+		_.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
+		//app.pubSub.events.on('book:clicked', this.addBook, this);
+	},
 
-        pubSub.events.trigger('book:add', this.collection);
+	render: function() {
+		this.renderBook(this.collection);
 
-        return this;
-    },
-     
-    renderBook: function(book) {
-        var html = this.template(book.toJSON());
-        this.$el.find('#books-selected').append(html);
-        return this;
-    },
-    
-    //If it doesn't exist, add selected book in PanierList collection, else increment its quantite
-    addBook: function(book) {
-        var modelExist = _.findWhere(this.collection.models, {cid: book.cid});
+		//app.pubSub.events.trigger('book:add', this.collection);
+		app.prixPanierView.processPrix(this.collection);
+	},
 
-        if (modelExist) {
-            modelExist.set('quantite', modelExist.get('quantite') + 1);
-        } else {
-            this.collection.add(book);
-        }
-        
-        this.render();
-    },
+	renderBook: function(books) {
+		var html = this.template(books.toJSON());
+		this.$el.find('#books-selected').html(html);
+	},
 
-    cleanPanier: function() {
-        //Reset quantity of book
-        _.each(this.collection.models, function(model) {
-            model.set('quantite', 1);
-        });
+	//If it doesn't exist, add selected book in PanierList collection, else increment its quantite
+	addBook: function(book) {
+		var modelExist = _.findWhere(this.collection.models, {cid: book.cid});
 
-        //Remove books in panier
-        this.collection.remove(this.collection.models);
-        
-        this.$el.find('#books-selected, #prix-reduction').empty();
-        this.$el.find('#prix-total').html('0');
-    }
+		if (modelExist) {
+			modelExist.set('quantite', modelExist.get('quantite') + 1);
+		} else {
+			this.collection.add(book);
+		}
+
+		this.render();
+	},
+
+	cleanPanier: function() {
+		//Reset quantity of book
+		_.each(this.collection.models, function(model) {
+			model.set('quantite', 1);
+		});
+
+		//Remove books in panier
+		//this.collection.remove(this.collection.models);
+		this.collection.reset();
+
+		this.render();
+	}
 });
 
 module.exports = PanierListView;
 },{"../collections/app.panier.collection":3,"./templates/panier-template.hbs":13,"backbone":15,"underscore":37}],11:[function(require,module,exports){
 var Backbone = require('backbone'),
-    _ = require('underscore'),
-    prixTemplate = require('./templates/prix-template.hbs'),
-    PanierPrix = require('../collections/app.prix.collection');
+	_ = require('underscore'),
+	prixTemplate = require('./templates/prix-template.hbs'),
+	PanierPrix = require('../collections/app.prix.collection');
 
 
 var PrixPanierView = Backbone.View.extend({
-    el: '#prix-panier',
-    template: prixTemplate,
-    collection: new PanierPrix(),
+	el: '#prix-panier',
+	template: prixTemplate,
+	collection: new PanierPrix([{prixTotal: 0, prixReduction: 0}]),
 
-    initialize: function() {
-        _.bindAll(this, 'render', 'processPrix');
-        pubSub.events.on('book:add', this.processPrix, this);
-    },
+	initialize: function() {
+		_.bindAll(this, 'render', 'processPrix');
+		//app.pubSub.events.on('book:add', this.processPrix, this);
+		this.render(0);
+	},
 
-    processPrix: function(collection) {
-        //Replace this collection (with fetch results) with PanierListView's collection
-        this.collection.reset(collection.models);
+	processPrix: function(collection) {
+		var isbnArray = [],
+				price = 0;
 
-        var isbnArray = [],
-            price = 0;
+		if (collection.models.length > 0) {
+			//Replace this collection (with fetch results) with PanierListView's collection
+			this.collection.reset(collection.models);
 
-        _.each(this.collection.models, function(model) {
-            isbnArray.push(model.get('isbn'));
-            price += model.get('price') * model.get('quantite');
-        });
+			_.each(this.collection.models, function(model) {
+				isbnArray.push(model.get('isbn'));
+				price += model.get('price') * model.get('quantite');
+			});
 
-        this.$el.find('#prix-total').html(price);
+			this.collection.url = 'http://henri-potier.xebia.fr/books/' + isbnArray.toString() + '/commercialOffers';
 
-        this.collection.url = 'http://henri-potier.xebia.fr/books/'+ isbnArray.toString() +'/commercialOffers';
-        
-        this.collection.fetch({
-            success: this.render
-        });
-    },
+			var that = this;
+			this.collection.fetch().done(function() {
+				that.render(price);
+			});
 
-    render: function() {
-        var offers = this.collection.models[0].get('offers');
+			// this.collection.fetch({
+			// 	success: this.render(price)
+			// });
+		} else {
+			this.render(price);
+		}
 
-        if (offers) {
-            var prixTotal = this.$el.find('#prix-total').html(),
-                prixPercentage,
-                prixMinus,
-                prixSlice,
-                prixArray = [];
+		//this.$el.find('#prix-total').html(price);
+		
+	},
 
-            //Recalcule le prix pour chaque promotion et le push dans un tableau
-            _.each(offers, function(value) {
-                switch(value.type) {
-                    case 'percentage':
-                        prixPercentage = prixTotal - (prixTotal * (value.value / 100));
-                        prixArray.push(prixPercentage);
-                        break;
-                    case 'minus':
-                        prixMinus = prixTotal - value.value;
-                        prixArray.push(prixMinus);
-                        break;
-                    case 'slice':
-                        if (prixTotal > value.sliceValue) {
-                            var division = prixTotal / value.sliceValue;
-                            prixSlice = prixTotal - (value.value * parseInt(division, 10));
-                            prixArray.push(prixSlice);
-                        }
-                        break;
-                }
-            });
+	render: function(price) {
+		var prixTotal = price,
+			prixReduction,
+			prixPercentage,
+			prixMinus,
+			prixSlice,
+			prixArray = [];
 
-            //Sort array by price
-            var prixArraySort = prixArray.sort(function(a, b) {
-                return a - b;
-            });
+		if (prixTotal !== 0) {
+			var offers = this.collection.models[0].get('offers');
 
-            //The cheapest price
-            var prixReduction = prixArraySort[0];
+			if (offers) {
+				//Recalcule le prix pour chaque promotion et le push dans un tableau
+				_.each(offers, function(value) {
+					switch (value.type) {
+						case 'percentage':
+							prixPercentage = +prixTotal - (+prixTotal * (value.value / 100));
+							prixArray.push(prixPercentage);
+							break;
+						case 'minus':
+							prixMinus = +prixTotal - value.value;
+							prixArray.push(prixMinus);
+							break;
+						case 'slice':
+							if (+prixTotal > value.sliceValue) {
+								var division = +prixTotal / value.sliceValue;
+								prixSlice = +prixTotal - (value.value * division);
+								prixArray.push(prixSlice);
+							}
+							break;
+					}
+				});
 
-            this.collection.models[0].set('prixTotal', prixTotal);
-            this.collection.models[0].set('prixReduction', prixReduction);
-        
-            var html = this.template(this.collection.models[0].toJSON());
+				//Sort array by price
+				var prixArraySort = prixArray.sort(function(a, b) {
+					return a - b;
+				});
 
-            this.$el.html(html);
-        }
-    }
+				//The cheapest price
+				prixReduction = prixArraySort[0];
+			}
+		}
+		
+		this.collection.models[0].set('prixTotal', prixTotal);
+		this.collection.models[0].set('prixReduction', prixReduction);
+
+		var html = this.template(this.collection.models[0].toJSON());
+
+		this.$el.html(html);
+	}
 });
 
 module.exports = PrixPanierView;
@@ -321,45 +340,54 @@ module.exports = PrixPanierView;
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    var alias1=container.lambda, alias2=container.escapeExpression;
+    var helper, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
 
-  return "<p><img src=\""
-    + alias2(alias1((depth0 != null ? depth0.cover : depth0), depth0))
+  return "<img src=\""
+    + alias4(((helper = (helper = helpers.cover || (depth0 != null ? depth0.cover : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"cover","hash":{},"data":data}) : helper)))
     + "\" alt=\""
-    + alias2(alias1((depth0 != null ? depth0.title : depth0), depth0))
-    + "\"></p>\r\n<p>"
-    + alias2(alias1((depth0 != null ? depth0.title : depth0), depth0))
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
+    + "\">\r\n<p>"
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
     + "</p>\r\n<p class=\"price-book\">"
-    + alias2(alias1((depth0 != null ? depth0.price : depth0), depth0))
+    + alias4(((helper = (helper = helpers.price || (depth0 != null ? depth0.price : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"price","hash":{},"data":data}) : helper)))
     + " EUROS</p>\r\n";
 },"useData":true});
 
 },{"hbsfy/runtime":35}],13:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
-module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    var alias1=container.lambda, alias2=container.escapeExpression;
+module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing, alias3="function", alias4=container.escapeExpression;
 
-  return "<p>"
-    + alias2(alias1((depth0 != null ? depth0.title : depth0), depth0))
+  return "	<li>"
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
     + " <span class=\"prix\">"
-    + alias2(alias1((depth0 != null ? depth0.price : depth0), depth0))
+    + alias4(((helper = (helper = helpers.price || (depth0 != null ? depth0.price : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"price","hash":{},"data":data}) : helper)))
     + "€</span><span class=\"quantite\">X"
-    + alias2(alias1((depth0 != null ? depth0.quantite : depth0), depth0))
-    + "</span></p>";
+    + alias4(((helper = (helper = helpers.quantite || (depth0 != null ? depth0.quantite : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"quantite","hash":{},"data":data}) : helper)))
+    + "</span></li>\r\n";
+},"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
 },{"hbsfy/runtime":35}],14:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
-module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
-    var alias1=container.lambda, alias2=container.escapeExpression;
+module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
+    var helper;
 
-  return "<p>Prix total: <span id=\"prix-total\">"
-    + alias2(alias1((depth0 != null ? depth0.prixTotal : depth0), depth0))
-    + "</span>€</p>\r\n<p id=\"prix-reduction\">Prix avec réduction: "
-    + alias2(alias1((depth0 != null ? depth0.prixReduction : depth0), depth0))
-    + "€</p>";
+  return "	<p>Prix avec réduction: "
+    + container.escapeExpression(((helper = (helper = helpers.prixReduction || (depth0 != null ? depth0.prixReduction : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : {},{"name":"prixReduction","hash":{},"data":data}) : helper)))
+    + "€</p>\r\n";
+},"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : {};
+
+  return "<p>Prix total: "
+    + container.escapeExpression(((helper = (helper = helpers.prixTotal || (depth0 != null ? depth0.prixTotal : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(alias1,{"name":"prixTotal","hash":{},"data":data}) : helper)))
+    + "€</p>\r\n"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.prixReduction : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
 },{"hbsfy/runtime":35}],15:[function(require,module,exports){

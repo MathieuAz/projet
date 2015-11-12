@@ -1,1 +1,3 @@
-<p>{{this.title}} <span class="prix">{{this.price}}€</span><span class="quantite">X{{this.quantite}}</span></p>
+{{#each this}}
+	<li>{{title}} <span class="prix">{{price}}€</span><span class="quantite">X{{quantite}}</span></li>
+{{/each}}

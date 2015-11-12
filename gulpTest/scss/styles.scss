@@ -9,31 +9,33 @@ p, ul, li, h2{
 	margin: 0;
 	padding: 0;
 }
-.list-content{
-	margin: 30px 0 70px;
+li{
+	list-style-type: none;
 }
 h2{
 	margin-bottom: 10px;
 	font-size: 22px;
 }
-li{
-	display: inline-block;
-	margin-left: 30px;
-    list-style-type: none;
+.list-content{
+	margin: 30px 0 70px;
 
-    &:first-child{
-    	margin: 0;
-    }
-}
+	li{
+		display: inline-block;
+		margin-left: 30px;
+		cursor: pointer;
 
-img{
-	width: 120px;
-}
-li p{
-	width: 150px;
-	font-size: 12px;
-	color: #004B91;
-	cursor: pointer;
+	    &:first-child{
+	    	margin: 0;
+	    }
+	    p{
+			width: 150px;
+			font-size: 12px;
+			color: #004B91;
+		}
+		img{
+			width: 120px;
+		}
+	}
 }
 .books-selected{
 	margin-bottom: 20px;
@@ -54,18 +56,19 @@ li p{
     -ms-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
     -o-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
     box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
-}
-.panier p{
-	margin-bottom: 4px;
-}
-.panier .quantite{
-	float: right;
-}
-.panier .prix{
-	margin-left: 10px;
-}
-.panier .vider-panier{
-	position: absolute;
-	top: 0;
-	right: 0;
+
+	li{
+		margin-bottom: 4px;
+	}
+	.quantite{
+		float: right;
+	}
+	.prix{
+		margin-left: 10px;
+	}
+	.vider-panier{
+		position: absolute;
+		top: 0;
+		right: 0;
+	}
 }

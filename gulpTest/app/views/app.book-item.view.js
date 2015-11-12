@@ -12,7 +12,7 @@ var BookItemView = Backbone.View.extend({
 	},
 
 	events: {
-		'click p': 'publish'
+		'click p, img': 'publish'
 	},
 
 	render: function() {
