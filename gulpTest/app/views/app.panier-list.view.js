@@ -15,6 +15,13 @@ var PanierListView = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
 		//app.pubSub.events.on('book:clicked', this.addBook, this);
+		var modelExist;
+
+		this.collection.on('add', this.render, this);
+		this.collection.on('change:quantite', this.render, this);
+
+		this.collection.fetch();
+		this.render();
 	},
 
 	render: function() {
@@ -30,27 +37,29 @@ var PanierListView = Backbone.View.extend({
 	},
 
 	//If it doesn't exist, add selected book in PanierList collection, else increment its quantite
-	addBook: function(book) {
-		var modelExist = _.findWhere(this.collection.models, {cid: book.cid});
+	addBook: function(bookSelected) {
+		//var modelExist = _.findWhere(this.collection.models, {cid: bookSelected.cid});
+		modelExist = false;
 
-		if (modelExist) {
-			modelExist.set('quantite', modelExist.get('quantite') + 1);
-		} else {
-			this.collection.add(book);
+		_.each(this.collection.models, function(book) {
+			if (book.get('title') === bookSelected.get('title')) {
+				modelExist = true;
+				book.set('quantite', book.get('quantite') + 1);
+				book.save();
+			}
+		});
+
+		if (!modelExist) {
+			this.collection.create(bookSelected.toJSON());
 		}
-
-		this.render();
 	},
 
 	cleanPanier: function() {
-		//Reset quantity of book
-		_.each(this.collection.models, function(model) {
-			model.set('quantite', 1);
-		});
-
 		//Remove books in panier
-		//this.collection.remove(this.collection.models);
-		this.collection.reset();
+		/* Invoke uses map under the hood, and destroy unstably removes the elements from the collection's models array
+		as map is processing over them (it destroys every other model in the collection).
+		As a workaround you can clone the models before calling destroy */
+		_.invoke(_.clone(this.collection.models), 'destroy');
 
 		this.render();
 	}

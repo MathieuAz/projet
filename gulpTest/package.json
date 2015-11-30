@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "backbone": "^1.2.3",
+    "backbone.localstorage": "^1.1.16",
     "browserify": "^11.2.0",
     "chai": "^3.3.0",
     "gulp": "^3.9.0",

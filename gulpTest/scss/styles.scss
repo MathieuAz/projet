@@ -35,15 +35,12 @@ h2{
 		img{
 			width: 120px;
 		}
+		.price-book{
+			margin-top: 2px;
+			font-size: 14px;
+			color: #900;
+		}
 	}
-}
-.books-selected{
-	margin-bottom: 20px;
-}
-.price-book{
-	margin-top: 2px;
-	font-size: 14px;
-	color: #900;
 }
 .panier{
 	position: relative;
@@ -51,12 +48,11 @@ h2{
 	padding: 10px;
 	border: 1px solid #ddd;
 	background: #fff;
-	-webkit-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
-    -moz-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
-    -ms-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
-    -o-box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
     box-shadow: rgba(0, 0, 0, 0.2) 0 2px 6px 0;
 
+	.books-selected{
+		margin-bottom: 20px;
+	}
 	li{
 		margin-bottom: 4px;
 	}

@@ -7,7 +7,7 @@ var $ = require('jquery'),
 	PrixPanierView = require('./views/app.prix-panier.view');
 
 
-(function(window, $, undefined) {
+$(function() {
 	if (window.__backboneAgent) {
 		window.__backboneAgent.handleBackbone(Backbone);
 	}
@@ -20,7 +20,7 @@ var $ = require('jquery'),
 
 	//INSTANTIATE VIEWS
 	app.bookListView = new BookListView();
-	app.panierListView = new PanierListView();
 	app.prixPanierView = new PrixPanierView();
+	app.panierListView = new PanierListView();
 
-})(window, $);
+});

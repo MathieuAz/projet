@@ -8,7 +8,7 @@ var $ = require('jquery'),
 	PrixPanierView = require('./views/app.prix-panier.view');
 
 
-(function(window, $, undefined) {
+$(function() {
 	if (window.__backboneAgent) {
 		window.__backboneAgent.handleBackbone(Backbone);
 	}
@@ -21,11 +21,11 @@ var $ = require('jquery'),
 
 	//INSTANTIATE VIEWS
 	app.bookListView = new BookListView();
-	app.panierListView = new PanierListView();
 	app.prixPanierView = new PrixPanierView();
+	app.panierListView = new PanierListView();
 
-})(window, $);
-},{"./controllers/app.controller":5,"./pubsub":7,"./views/app.book-list.view":9,"./views/app.panier-list.view":10,"./views/app.prix-panier.view":11,"backbone":15,"jquery":36}],2:[function(require,module,exports){
+});
+},{"./controllers/app.controller":5,"./pubsub":7,"./views/app.book-list.view":9,"./views/app.panier-list.view":10,"./views/app.prix-panier.view":11,"backbone":16,"jquery":37}],2:[function(require,module,exports){
 var Backbone = require('backbone'),
 	Book = require('../models/app.model');
 
@@ -36,21 +36,26 @@ var BooksList = Backbone.Collection.extend({
 });
 
 module.exports = BooksList;
-},{"../models/app.model":6,"backbone":15}],3:[function(require,module,exports){
-var Backbone = require('backbone');
+},{"../models/app.model":6,"backbone":16}],3:[function(require,module,exports){
+var Backbone = require('backbone'),
+	BackboneLocalStorage = require('backbone.localstorage'),
+	Book = require('../models/app.model.js');
 
 
-var PanierList = Backbone.Collection.extend({});
+var PanierList = Backbone.Collection.extend({
+	model: Book,
+	localStorage: new BackboneLocalStorage('Books-List')
+});
 
 module.exports = PanierList;
-},{"backbone":15}],4:[function(require,module,exports){
+},{"../models/app.model.js":6,"backbone":16,"backbone.localstorage":15}],4:[function(require,module,exports){
 var Backbone = require('backbone');
 
 
 var PanierPrix = Backbone.Collection.extend({});
 
 module.exports = PanierPrix;
-},{"backbone":15}],5:[function(require,module,exports){
+},{"backbone":16}],5:[function(require,module,exports){
 var _ = require('underscore');
 
 var Controller = (function() {
@@ -91,7 +96,7 @@ var Controller = (function() {
 })();
 
 module.exports = Controller;
-},{"underscore":37}],6:[function(require,module,exports){
+},{"underscore":38}],6:[function(require,module,exports){
 var Backbone = require('backbone');
 
 
@@ -100,7 +105,7 @@ var Book = Backbone.Model.extend({
 });
 
 module.exports = Book;
-},{"backbone":15}],7:[function(require,module,exports){
+},{"backbone":16}],7:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore');
 
@@ -110,7 +115,7 @@ var PubSub = function() {
 };
 
 module.exports = PubSub;
-},{"backbone":15,"underscore":37}],8:[function(require,module,exports){
+},{"backbone":16,"underscore":38}],8:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	bookTemplate = require('./templates/book-template.hbs');
@@ -140,7 +145,7 @@ var BookItemView = Backbone.View.extend({
 });
 
 module.exports = BookItemView;
-},{"./templates/book-template.hbs":12,"backbone":15,"underscore":37}],9:[function(require,module,exports){
+},{"./templates/book-template.hbs":12,"backbone":16,"underscore":38}],9:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	BooksList = require('../collections/app.book.collection'),
@@ -174,7 +179,7 @@ var BookListView = Backbone.View.extend({
 });
 
 module.exports = BookListView;
-},{"../collections/app.book.collection":2,"./app.book-item.view":8,"backbone":15,"underscore":37}],10:[function(require,module,exports){
+},{"../collections/app.book.collection":2,"./app.book-item.view":8,"backbone":16,"underscore":38}],10:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	panierTemplate = require('./templates/panier-template.hbs'),
@@ -192,6 +197,13 @@ var PanierListView = Backbone.View.extend({
 	initialize: function() {
 		_.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
 		//app.pubSub.events.on('book:clicked', this.addBook, this);
+		var modelExist;
+
+		this.collection.on('add', this.render, this);
+		this.collection.on('change:quantite', this.render, this);
+
+		this.collection.fetch();
+		this.render();
 	},
 
 	render: function() {
@@ -207,34 +219,36 @@ var PanierListView = Backbone.View.extend({
 	},
 
 	//If it doesn't exist, add selected book in PanierList collection, else increment its quantite
-	addBook: function(book) {
-		var modelExist = _.findWhere(this.collection.models, {cid: book.cid});
+	addBook: function(bookSelected) {
+		//var modelExist = _.findWhere(this.collection.models, {cid: bookSelected.cid});
+		modelExist = false;
 
-		if (modelExist) {
-			modelExist.set('quantite', modelExist.get('quantite') + 1);
-		} else {
-			this.collection.add(book);
+		_.each(this.collection.models, function(book) {
+			if (book.get('title') === bookSelected.get('title')) {
+				modelExist = true;
+				book.set('quantite', book.get('quantite') + 1);
+				book.save();
+			}
+		});
+
+		if (!modelExist) {
+			this.collection.create(bookSelected.toJSON());
 		}
-
-		this.render();
 	},
 
 	cleanPanier: function() {
-		//Reset quantity of book
-		_.each(this.collection.models, function(model) {
-			model.set('quantite', 1);
-		});
-
 		//Remove books in panier
-		//this.collection.remove(this.collection.models);
-		this.collection.reset();
+		/* Invoke uses map under the hood, and destroy unstably removes the elements from the collection's models array
+		as map is processing over them (it destroys every other model in the collection).
+		As a workaround you can clone the models before calling destroy */
+		_.invoke(_.clone(this.collection.models), 'destroy');
 
 		this.render();
 	}
 });
 
 module.exports = PanierListView;
-},{"../collections/app.panier.collection":3,"./templates/panier-template.hbs":13,"backbone":15,"underscore":37}],11:[function(require,module,exports){
+},{"../collections/app.panier.collection":3,"./templates/panier-template.hbs":13,"backbone":16,"underscore":38}],11:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	prixTemplate = require('./templates/prix-template.hbs'),
@@ -336,7 +350,7 @@ var PrixPanierView = Backbone.View.extend({
 });
 
 module.exports = PrixPanierView;
-},{"../collections/app.prix.collection":4,"./templates/prix-template.hbs":14,"backbone":15,"underscore":37}],12:[function(require,module,exports){
+},{"../collections/app.prix.collection":4,"./templates/prix-template.hbs":14,"backbone":16,"underscore":38}],12:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
@@ -353,7 +367,7 @@ module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":f
     + " EUROS</p>\r\n";
 },"useData":true});
 
-},{"hbsfy/runtime":35}],13:[function(require,module,exports){
+},{"hbsfy/runtime":36}],13:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
@@ -372,7 +386,7 @@ module.exports = HandlebarsCompiler.template({"1":function(container,depth0,help
   return ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
-},{"hbsfy/runtime":35}],14:[function(require,module,exports){
+},{"hbsfy/runtime":36}],14:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
@@ -390,7 +404,267 @@ module.exports = HandlebarsCompiler.template({"1":function(container,depth0,help
     + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.prixReduction : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
-},{"hbsfy/runtime":35}],15:[function(require,module,exports){
+},{"hbsfy/runtime":36}],15:[function(require,module,exports){
+/**
+ * Backbone localStorage Adapter
+ * Version 1.1.16
+ *
+ * https://github.com/jeromegn/Backbone.localStorage
+ */
+(function (root, factory) {
+  if (typeof exports === 'object' && typeof require === 'function') {
+    module.exports = factory(require("backbone"));
+  } else if (typeof define === "function" && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(["backbone"], function(Backbone) {
+      // Use global variables if the locals are undefined.
+      return factory(Backbone || root.Backbone);
+    });
+  } else {
+    factory(Backbone);
+  }
+}(this, function(Backbone) {
+// A simple module to replace `Backbone.sync` with *localStorage*-based
+// persistence. Models are given GUIDS, and saved into a JSON object. Simple
+// as that.
+
+// Generate four random hex digits.
+function S4() {
+   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+};
+
+// Generate a pseudo-GUID by concatenating random hexadecimal.
+function guid() {
+   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+};
+
+function isObject(item) {
+  return item === Object(item);
+}
+
+function contains(array, item) {
+  var i = array.length;
+  while (i--) if (array[i] === item) return true;
+  return false;
+}
+
+function extend(obj, props) {
+  for (var key in props) obj[key] = props[key]
+  return obj;
+}
+
+function result(object, property) {
+    if (object == null) return void 0;
+    var value = object[property];
+    return (typeof value === 'function') ? object[property]() : value;
+}
+
+// Our Store is represented by a single JS object in *localStorage*. Create it
+// with a meaningful name, like the name you'd give a table.
+// window.Store is deprectated, use Backbone.LocalStorage instead
+Backbone.LocalStorage = window.Store = function(name, serializer) {
+  if( !this.localStorage ) {
+    throw "Backbone.localStorage: Environment does not support localStorage."
+  }
+  this.name = name;
+  this.serializer = serializer || {
+    serialize: function(item) {
+      return isObject(item) ? JSON.stringify(item) : item;
+    },
+    // fix for "illegal access" error on Android when JSON.parse is passed null
+    deserialize: function (data) {
+      return data && JSON.parse(data);
+    }
+  };
+  var store = this.localStorage().getItem(this.name);
+  this.records = (store && store.split(",")) || [];
+};
+
+extend(Backbone.LocalStorage.prototype, {
+
+  // Save the current state of the **Store** to *localStorage*.
+  save: function() {
+    this.localStorage().setItem(this.name, this.records.join(","));
+  },
+
+  // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
+  // have an id of it's own.
+  create: function(model) {
+    if (!model.id && model.id !== 0) {
+      model.id = guid();
+      model.set(model.idAttribute, model.id);
+    }
+    this.localStorage().setItem(this._itemName(model.id), this.serializer.serialize(model));
+    this.records.push(model.id.toString());
+    this.save();
+    return this.find(model);
+  },
+
+  // Update a model by replacing its copy in `this.data`.
+  update: function(model) {
+    this.localStorage().setItem(this._itemName(model.id), this.serializer.serialize(model));
+    var modelId = model.id.toString();
+    if (!contains(this.records, modelId)) {
+      this.records.push(modelId);
+      this.save();
+    }
+    return this.find(model);
+  },
+
+  // Retrieve a model from `this.data` by id.
+  find: function(model) {
+    return this.serializer.deserialize(this.localStorage().getItem(this._itemName(model.id)));
+  },
+
+  // Return the array of all models currently in storage.
+  findAll: function() {
+    var result = [];
+    for (var i = 0, id, data; i < this.records.length; i++) {
+      id = this.records[i];
+      data = this.serializer.deserialize(this.localStorage().getItem(this._itemName(id)));
+      if (data != null) result.push(data);
+    }
+    return result;
+  },
+
+  // Delete a model from `this.data`, returning it.
+  destroy: function(model) {
+    this.localStorage().removeItem(this._itemName(model.id));
+    var modelId = model.id.toString();
+    for (var i = 0, id; i < this.records.length; i++) {
+      if (this.records[i] === modelId) {
+        this.records.splice(i, 1);
+      }
+    }
+    this.save();
+    return model;
+  },
+
+  localStorage: function() {
+    return localStorage;
+  },
+
+  // Clear localStorage for specific collection.
+  _clear: function() {
+    var local = this.localStorage(),
+      itemRe = new RegExp("^" + this.name + "-");
+
+    // Remove id-tracking item (e.g., "foo").
+    local.removeItem(this.name);
+
+    // Match all data items (e.g., "foo-ID") and remove.
+    for (var k in local) {
+      if (itemRe.test(k)) {
+        local.removeItem(k);
+      }
+    }
+
+    this.records.length = 0;
+  },
+
+  // Size of localStorage.
+  _storageSize: function() {
+    return this.localStorage().length;
+  },
+
+  _itemName: function(id) {
+    return this.name+"-"+id;
+  }
+
+});
+
+// localSync delegate to the model or collection's
+// *localStorage* property, which should be an instance of `Store`.
+// window.Store.sync and Backbone.localSync is deprecated, use Backbone.LocalStorage.sync instead
+Backbone.LocalStorage.sync = window.Store.sync = Backbone.localSync = function(method, model, options) {
+  var store = result(model, 'localStorage') || result(model.collection, 'localStorage');
+
+  var resp, errorMessage;
+  //If $ is having Deferred - use it.
+  var syncDfd = Backbone.$ ?
+    (Backbone.$.Deferred && Backbone.$.Deferred()) :
+    (Backbone.Deferred && Backbone.Deferred());
+
+  try {
+
+    switch (method) {
+      case "read":
+        resp = model.id != undefined ? store.find(model) : store.findAll();
+        break;
+      case "create":
+        resp = store.create(model);
+        break;
+      case "update":
+        resp = store.update(model);
+        break;
+      case "delete":
+        resp = store.destroy(model);
+        break;
+    }
+
+  } catch(error) {
+    if (error.code === 22 && store._storageSize() === 0)
+      errorMessage = "Private browsing is unsupported";
+    else
+      errorMessage = error.message;
+  }
+
+  if (resp) {
+    if (options && options.success) {
+      if (Backbone.VERSION === "0.9.10") {
+        options.success(model, resp, options);
+      } else {
+        options.success(resp);
+      }
+    }
+    if (syncDfd) {
+      syncDfd.resolve(resp);
+    }
+
+  } else {
+    errorMessage = errorMessage ? errorMessage
+                                : "Record Not Found";
+
+    if (options && options.error)
+      if (Backbone.VERSION === "0.9.10") {
+        options.error(model, errorMessage, options);
+      } else {
+        options.error(errorMessage);
+      }
+
+    if (syncDfd)
+      syncDfd.reject(errorMessage);
+  }
+
+  // add compatibility with $.ajax
+  // always execute callback for success and error
+  if (options && options.complete) options.complete(resp);
+
+  return syncDfd && syncDfd.promise();
+};
+
+Backbone.ajaxSync = Backbone.sync;
+
+Backbone.getSyncMethod = function(model, options) {
+  var forceAjaxSync = options && options.ajaxSync;
+
+  if(!forceAjaxSync && (result(model, 'localStorage') || result(model.collection, 'localStorage'))) {
+    return Backbone.localSync;
+  }
+
+  return Backbone.ajaxSync;
+};
+
+// Override 'Backbone.sync' to default to localSync,
+// the original 'Backbone.sync' is still available in 'Backbone.ajaxSync'
+Backbone.sync = function(method, model, options) {
+  return Backbone.getSyncMethod(model, options).apply(this, [method, model, options]);
+};
+
+return Backbone.LocalStorage;
+}));
+
+},{"backbone":16}],16:[function(require,module,exports){
 (function (global){
 //     Backbone.js 1.2.3
 
@@ -2288,7 +2562,7 @@ module.exports = HandlebarsCompiler.template({"1":function(container,depth0,help
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"jquery":36,"underscore":37}],16:[function(require,module,exports){
+},{"jquery":37,"underscore":38}],17:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2357,7 +2631,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":17,"./handlebars/exception":20,"./handlebars/no-conflict":30,"./handlebars/runtime":31,"./handlebars/safe-string":32,"./handlebars/utils":33}],17:[function(require,module,exports){
+},{"./handlebars/base":18,"./handlebars/exception":21,"./handlebars/no-conflict":31,"./handlebars/runtime":32,"./handlebars/safe-string":33,"./handlebars/utils":34}],18:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2463,7 +2737,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":18,"./exception":20,"./helpers":21,"./logger":29,"./utils":33}],18:[function(require,module,exports){
+},{"./decorators":19,"./exception":21,"./helpers":22,"./logger":30,"./utils":34}],19:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2481,7 +2755,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":19}],19:[function(require,module,exports){
+},{"./decorators/inline":20}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2512,7 +2786,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":33}],20:[function(require,module,exports){
+},{"../utils":34}],21:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2554,7 +2828,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2602,7 +2876,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":22,"./helpers/each":23,"./helpers/helper-missing":24,"./helpers/if":25,"./helpers/log":26,"./helpers/lookup":27,"./helpers/with":28}],22:[function(require,module,exports){
+},{"./helpers/block-helper-missing":23,"./helpers/each":24,"./helpers/helper-missing":25,"./helpers/if":26,"./helpers/log":27,"./helpers/lookup":28,"./helpers/with":29}],23:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2643,7 +2917,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":33}],23:[function(require,module,exports){
+},{"../utils":34}],24:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2739,7 +3013,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":20,"../utils":33}],24:[function(require,module,exports){
+},{"../exception":21,"../utils":34}],25:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2766,7 +3040,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":20}],25:[function(require,module,exports){
+},{"../exception":21}],26:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2797,7 +3071,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":33}],26:[function(require,module,exports){
+},{"../utils":34}],27:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2825,7 +3099,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2839,7 +3113,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2874,7 +3148,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":33}],29:[function(require,module,exports){
+},{"../utils":34}],30:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2923,7 +3197,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":33}],30:[function(require,module,exports){
+},{"./utils":34}],31:[function(require,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -2946,7 +3220,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3240,7 +3514,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":17,"./exception":20,"./utils":33}],32:[function(require,module,exports){
+},{"./base":18,"./exception":21,"./utils":34}],33:[function(require,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -3257,7 +3531,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3383,15 +3657,15 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 // Create a simple path alias to allow browserify to resolve
 // the runtime on a supported path.
 module.exports = require('./dist/cjs/handlebars.runtime')['default'];
 
-},{"./dist/cjs/handlebars.runtime":16}],35:[function(require,module,exports){
+},{"./dist/cjs/handlebars.runtime":17}],36:[function(require,module,exports){
 module.exports = require("handlebars/runtime")["default"];
 
-},{"handlebars/runtime":34}],36:[function(require,module,exports){
+},{"handlebars/runtime":35}],37:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -12603,7 +12877,7 @@ return jQuery;
 
 }));
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
