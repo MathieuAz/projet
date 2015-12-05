@@ -1,31 +1,26 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var $ = require('jquery'),
 	Backbone = require('backbone'),
-	PubSub = require('./pubsub'),
-	Controller = require('./controllers/app.controller'),
+	//Controller = require('./controllers/app.controller'),
 	BookListView = require('./views/app.book-list.view'),
 	PanierListView = require('./views/app.panier-list.view'),
 	PrixPanierView = require('./views/app.prix-panier.view');
 
 
 $(function() {
-	if (window.__backboneAgent) {
-		window.__backboneAgent.handleBackbone(Backbone);
-	}
+	// if (window.__backboneAgent) {
+	// 	window.__backboneAgent.handleBackbone(Backbone);
+	// }
 
-	window.app = {};
-
-	app.pubSub = new PubSub();
-
-	app.controller = new Controller.init();
+	// Controller.init();
 
 	//INSTANTIATE VIEWS
-	app.bookListView = new BookListView();
-	app.prixPanierView = new PrixPanierView();
-	app.panierListView = new PanierListView();
-
+	bookListView = new BookListView();
+	prixPanierView = new PrixPanierView();
+	panierListView = new PanierListView();
+	
 });
-},{"./controllers/app.controller":5,"./pubsub":7,"./views/app.book-list.view":9,"./views/app.panier-list.view":10,"./views/app.prix-panier.view":11,"backbone":16,"jquery":37}],2:[function(require,module,exports){
+},{"./views/app.book-list.view":8,"./views/app.panier-list.view":9,"./views/app.prix-panier.view":10,"backbone":15,"jquery":36}],2:[function(require,module,exports){
 var Backbone = require('backbone'),
 	Book = require('../models/app.model');
 
@@ -36,7 +31,7 @@ var BooksList = Backbone.Collection.extend({
 });
 
 module.exports = BooksList;
-},{"../models/app.model":6,"backbone":16}],3:[function(require,module,exports){
+},{"../models/app.model":5,"backbone":15}],3:[function(require,module,exports){
 var Backbone = require('backbone'),
 	BackboneLocalStorage = require('backbone.localstorage'),
 	Book = require('../models/app.model.js');
@@ -48,55 +43,14 @@ var PanierList = Backbone.Collection.extend({
 });
 
 module.exports = PanierList;
-},{"../models/app.model.js":6,"backbone":16,"backbone.localstorage":15}],4:[function(require,module,exports){
+},{"../models/app.model.js":5,"backbone":15,"backbone.localstorage":14}],4:[function(require,module,exports){
 var Backbone = require('backbone');
 
 
 var PanierPrix = Backbone.Collection.extend({});
 
 module.exports = PanierPrix;
-},{"backbone":16}],5:[function(require,module,exports){
-var _ = require('underscore');
-
-var Controller = (function() {
-	var controller = {};
-
-	// var display = _.bind(function() {
-
-	//     this.layout = new this.Views.mesAlertes();
-
-	//     this.alertesModel = new this.Models.mesAlertesModel();
-
-	// }, mesAlertes);
-
-	// var success = _.bind(function() {
-	//     this.layout.model.set('alerteCree', true, {
-	//         silent: true
-	//     });
-	//     this.layout.render();
-	//     if (KV.storage.isAvailable()) {
-	//         KV.storage.setItem('AV-preventInit', true);
-	//     }
-	// }, mesAlertes);
-
-	var registerEvents = _.bind(function() {
-		// app.mediator.subscribe("maSelection: Views.maSelection: displayMaSelection", display);
-		// app.mediator.subscribe("mesAlertes: Views.mesAlertes: Success", success);
-	}, controller);
-
-	/**
-	 * [init mesAlertes]
-	 */
-	controller.init = function() {
-		console.log("[Controller:init] initialisation de l'appli Henri Potier");
-		registerEvents();
-	};
-
-	return controller;
-})();
-
-module.exports = Controller;
-},{"underscore":38}],6:[function(require,module,exports){
+},{"backbone":15}],5:[function(require,module,exports){
 var Backbone = require('backbone');
 
 
@@ -105,7 +59,7 @@ var Book = Backbone.Model.extend({
 });
 
 module.exports = Book;
-},{"backbone":16}],7:[function(require,module,exports){
+},{"backbone":15}],6:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore');
 
@@ -114,11 +68,14 @@ var PubSub = function() {
     this.events = _.extend({}, Backbone.Events);
 };
 
-module.exports = PubSub;
-},{"backbone":16,"underscore":38}],8:[function(require,module,exports){
+var pubSub = new PubSub();
+
+module.exports = pubSub;
+},{"backbone":15,"underscore":37}],7:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
-	bookTemplate = require('./templates/book-template.hbs');
+	bookTemplate = require('./templates/book-template.hbs'),
+	pubSub = require('../pubsub');
 
 
 var BookItemView = Backbone.View.extend({
@@ -139,13 +96,13 @@ var BookItemView = Backbone.View.extend({
 	},
 
 	publish: function() {
-		//app.pubSub.events.trigger('book:clicked', this.model);
-		app.panierListView.addBook(this.model);
+		pubSub.events.trigger('book:clicked', this.model);
+		//app.panierListView.addBook(this.model);
 	}
 });
 
 module.exports = BookItemView;
-},{"./templates/book-template.hbs":12,"backbone":16,"underscore":38}],9:[function(require,module,exports){
+},{"../pubsub":6,"./templates/book-template.hbs":11,"backbone":15,"underscore":37}],8:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	BooksList = require('../collections/app.book.collection'),
@@ -179,11 +136,12 @@ var BookListView = Backbone.View.extend({
 });
 
 module.exports = BookListView;
-},{"../collections/app.book.collection":2,"./app.book-item.view":8,"backbone":16,"underscore":38}],10:[function(require,module,exports){
+},{"../collections/app.book.collection":2,"./app.book-item.view":7,"backbone":15,"underscore":37}],9:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	panierTemplate = require('./templates/panier-template.hbs'),
-	PanierList = require('../collections/app.panier.collection');
+	PanierList = require('../collections/app.panier.collection'),
+	pubSub = require('../pubsub');
 
 
 var PanierListView = Backbone.View.extend({
@@ -196,21 +154,21 @@ var PanierListView = Backbone.View.extend({
 
 	initialize: function() {
 		_.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
-		//app.pubSub.events.on('book:clicked', this.addBook, this);
+		pubSub.events.on('book:clicked', this.addBook, this);
 		var modelExist;
 
 		this.collection.on('add', this.render, this);
 		this.collection.on('change:quantite', this.render, this);
 
 		this.collection.fetch();
-		this.render();
+		//this.render();
 	},
 
 	render: function() {
 		this.renderBook(this.collection);
 
-		//app.pubSub.events.trigger('book:add', this.collection);
-		app.prixPanierView.processPrix(this.collection);
+		pubSub.events.trigger('book:add', this.collection);
+		//app.prixPanierView.processPrix(this.collection);
 	},
 
 	renderBook: function(books) {
@@ -248,11 +206,12 @@ var PanierListView = Backbone.View.extend({
 });
 
 module.exports = PanierListView;
-},{"../collections/app.panier.collection":3,"./templates/panier-template.hbs":13,"backbone":16,"underscore":38}],11:[function(require,module,exports){
+},{"../collections/app.panier.collection":3,"../pubsub":6,"./templates/panier-template.hbs":12,"backbone":15,"underscore":37}],10:[function(require,module,exports){
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	prixTemplate = require('./templates/prix-template.hbs'),
-	PanierPrix = require('../collections/app.prix.collection');
+	PanierPrix = require('../collections/app.prix.collection'),
+	pubSub = require('../pubsub');
 
 
 var PrixPanierView = Backbone.View.extend({
@@ -262,7 +221,7 @@ var PrixPanierView = Backbone.View.extend({
 
 	initialize: function() {
 		_.bindAll(this, 'render', 'processPrix');
-		//app.pubSub.events.on('book:add', this.processPrix, this);
+		pubSub.events.on('book:add', this.processPrix, this);
 		this.render(0);
 	},
 
@@ -292,9 +251,6 @@ var PrixPanierView = Backbone.View.extend({
 		} else {
 			this.render(price);
 		}
-
-		//this.$el.find('#prix-total').html(price);
-		
 	},
 
 	render: function(price) {
@@ -350,7 +306,7 @@ var PrixPanierView = Backbone.View.extend({
 });
 
 module.exports = PrixPanierView;
-},{"../collections/app.prix.collection":4,"./templates/prix-template.hbs":14,"backbone":16,"underscore":38}],12:[function(require,module,exports){
+},{"../collections/app.prix.collection":4,"../pubsub":6,"./templates/prix-template.hbs":13,"backbone":15,"underscore":37}],11:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
@@ -360,14 +316,16 @@ module.exports = HandlebarsCompiler.template({"compiler":[7,">= 4.0.0"],"main":f
     + alias4(((helper = (helper = helpers.cover || (depth0 != null ? depth0.cover : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"cover","hash":{},"data":data}) : helper)))
     + "\" alt=\""
     + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
-    + "\">\r\n<p>"
+    + "\" title=\""
+    + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
+    + "\" width=\"120\" height=\"175\">\r\n<p>"
     + alias4(((helper = (helper = helpers.title || (depth0 != null ? depth0.title : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data}) : helper)))
     + "</p>\r\n<p class=\"price-book\">"
     + alias4(((helper = (helper = helpers.price || (depth0 != null ? depth0.price : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"price","hash":{},"data":data}) : helper)))
     + " EUROS</p>\r\n";
 },"useData":true});
 
-},{"hbsfy/runtime":36}],13:[function(require,module,exports){
+},{"hbsfy/runtime":35}],12:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
@@ -386,7 +344,7 @@ module.exports = HandlebarsCompiler.template({"1":function(container,depth0,help
   return ((stack1 = helpers.each.call(depth0 != null ? depth0 : {},depth0,{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
-},{"hbsfy/runtime":36}],14:[function(require,module,exports){
+},{"hbsfy/runtime":35}],13:[function(require,module,exports){
 // hbsfy compiled Handlebars template
 var HandlebarsCompiler = require('hbsfy/runtime');
 module.exports = HandlebarsCompiler.template({"1":function(container,depth0,helpers,partials,data) {
@@ -404,7 +362,7 @@ module.exports = HandlebarsCompiler.template({"1":function(container,depth0,help
     + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.prixReduction : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data})) != null ? stack1 : "");
 },"useData":true});
 
-},{"hbsfy/runtime":36}],15:[function(require,module,exports){
+},{"hbsfy/runtime":35}],14:[function(require,module,exports){
 /**
  * Backbone localStorage Adapter
  * Version 1.1.16
@@ -664,7 +622,7 @@ Backbone.sync = function(method, model, options) {
 return Backbone.LocalStorage;
 }));
 
-},{"backbone":16}],16:[function(require,module,exports){
+},{"backbone":15}],15:[function(require,module,exports){
 (function (global){
 //     Backbone.js 1.2.3
 
@@ -2562,7 +2520,7 @@ return Backbone.LocalStorage;
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"jquery":37,"underscore":38}],17:[function(require,module,exports){
+},{"jquery":36,"underscore":37}],16:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2631,7 +2589,7 @@ exports['default'] = inst;
 module.exports = exports['default'];
 
 
-},{"./handlebars/base":18,"./handlebars/exception":21,"./handlebars/no-conflict":31,"./handlebars/runtime":32,"./handlebars/safe-string":33,"./handlebars/utils":34}],18:[function(require,module,exports){
+},{"./handlebars/base":17,"./handlebars/exception":20,"./handlebars/no-conflict":30,"./handlebars/runtime":31,"./handlebars/safe-string":32,"./handlebars/utils":33}],17:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2737,7 +2695,7 @@ exports.createFrame = _utils.createFrame;
 exports.logger = _logger2['default'];
 
 
-},{"./decorators":19,"./exception":21,"./helpers":22,"./logger":30,"./utils":34}],19:[function(require,module,exports){
+},{"./decorators":18,"./exception":20,"./helpers":21,"./logger":29,"./utils":33}],18:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2755,7 +2713,7 @@ function registerDefaultDecorators(instance) {
 }
 
 
-},{"./decorators/inline":20}],20:[function(require,module,exports){
+},{"./decorators/inline":19}],19:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2786,7 +2744,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":34}],21:[function(require,module,exports){
+},{"../utils":33}],20:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2828,7 +2786,7 @@ exports['default'] = Exception;
 module.exports = exports['default'];
 
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2876,7 +2834,7 @@ function registerDefaultHelpers(instance) {
 }
 
 
-},{"./helpers/block-helper-missing":23,"./helpers/each":24,"./helpers/helper-missing":25,"./helpers/if":26,"./helpers/log":27,"./helpers/lookup":28,"./helpers/with":29}],23:[function(require,module,exports){
+},{"./helpers/block-helper-missing":22,"./helpers/each":23,"./helpers/helper-missing":24,"./helpers/if":25,"./helpers/log":26,"./helpers/lookup":27,"./helpers/with":28}],22:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2917,7 +2875,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":34}],24:[function(require,module,exports){
+},{"../utils":33}],23:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3013,7 +2971,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":21,"../utils":34}],25:[function(require,module,exports){
+},{"../exception":20,"../utils":33}],24:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3040,7 +2998,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../exception":21}],26:[function(require,module,exports){
+},{"../exception":20}],25:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3071,7 +3029,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":34}],27:[function(require,module,exports){
+},{"../utils":33}],26:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3099,7 +3057,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3113,7 +3071,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3148,7 +3106,7 @@ exports['default'] = function (instance) {
 module.exports = exports['default'];
 
 
-},{"../utils":34}],30:[function(require,module,exports){
+},{"../utils":33}],29:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3197,7 +3155,7 @@ exports['default'] = logger;
 module.exports = exports['default'];
 
 
-},{"./utils":34}],31:[function(require,module,exports){
+},{"./utils":33}],30:[function(require,module,exports){
 (function (global){
 /* global window */
 'use strict';
@@ -3220,7 +3178,7 @@ module.exports = exports['default'];
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3514,7 +3472,7 @@ function executeDecorators(fn, prog, container, depths, data, blockParams) {
 }
 
 
-},{"./base":18,"./exception":21,"./utils":34}],33:[function(require,module,exports){
+},{"./base":17,"./exception":20,"./utils":33}],32:[function(require,module,exports){
 // Build out our basic SafeString type
 'use strict';
 
@@ -3531,7 +3489,7 @@ exports['default'] = SafeString;
 module.exports = exports['default'];
 
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3657,15 +3615,15 @@ function appendContextPath(contextPath, id) {
 }
 
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // Create a simple path alias to allow browserify to resolve
 // the runtime on a supported path.
 module.exports = require('./dist/cjs/handlebars.runtime')['default'];
 
-},{"./dist/cjs/handlebars.runtime":17}],36:[function(require,module,exports){
+},{"./dist/cjs/handlebars.runtime":16}],35:[function(require,module,exports){
 module.exports = require("handlebars/runtime")["default"];
 
-},{"handlebars/runtime":35}],37:[function(require,module,exports){
+},{"handlebars/runtime":34}],36:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -12877,7 +12835,7 @@ return jQuery;
 
 }));
 
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors

@@ -1,6 +1,7 @@
 var Backbone = require('backbone'),
 	_ = require('underscore'),
-	bookTemplate = require('./templates/book-template.hbs');
+	bookTemplate = require('./templates/book-template.hbs'),
+	pubSub = require('../pubsub');
 
 
 var BookItemView = Backbone.View.extend({
@@ -21,8 +22,8 @@ var BookItemView = Backbone.View.extend({
 	},
 
 	publish: function() {
-		//app.pubSub.events.trigger('book:clicked', this.model);
-		app.panierListView.addBook(this.model);
+		pubSub.events.trigger('book:clicked', this.model);
+		//app.panierListView.addBook(this.model);
 	}
 });
 

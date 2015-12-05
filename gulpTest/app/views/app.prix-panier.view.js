@@ -1,7 +1,8 @@
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	prixTemplate = require('./templates/prix-template.hbs'),
-	PanierPrix = require('../collections/app.prix.collection');
+	PanierPrix = require('../collections/app.prix.collection'),
+	pubSub = require('../pubsub');
 
 
 var PrixPanierView = Backbone.View.extend({
@@ -11,7 +12,7 @@ var PrixPanierView = Backbone.View.extend({
 
 	initialize: function() {
 		_.bindAll(this, 'render', 'processPrix');
-		//app.pubSub.events.on('book:add', this.processPrix, this);
+		pubSub.events.on('book:add', this.processPrix, this);
 		this.render(0);
 	},
 
@@ -41,9 +42,6 @@ var PrixPanierView = Backbone.View.extend({
 		} else {
 			this.render(price);
 		}
-
-		//this.$el.find('#prix-total').html(price);
-		
 	},
 
 	render: function(price) {

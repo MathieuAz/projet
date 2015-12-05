@@ -1,7 +1,8 @@
 var Backbone = require('backbone'),
 	_ = require('underscore'),
 	panierTemplate = require('./templates/panier-template.hbs'),
-	PanierList = require('../collections/app.panier.collection');
+	PanierList = require('../collections/app.panier.collection'),
+	pubSub = require('../pubsub');
 
 
 var PanierListView = Backbone.View.extend({
@@ -14,21 +15,21 @@ var PanierListView = Backbone.View.extend({
 
 	initialize: function() {
 		_.bindAll(this, 'render', 'renderBook', 'addBook', 'cleanPanier');
-		//app.pubSub.events.on('book:clicked', this.addBook, this);
+		pubSub.events.on('book:clicked', this.addBook, this);
 		var modelExist;
 
 		this.collection.on('add', this.render, this);
 		this.collection.on('change:quantite', this.render, this);
 
 		this.collection.fetch();
-		this.render();
+		//this.render();
 	},
 
 	render: function() {
 		this.renderBook(this.collection);
 
-		//app.pubSub.events.trigger('book:add', this.collection);
-		app.prixPanierView.processPrix(this.collection);
+		pubSub.events.trigger('book:add', this.collection);
+		//app.prixPanierView.processPrix(this.collection);
 	},
 
 	renderBook: function(books) {
