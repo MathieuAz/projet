@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="index.css" charset="utf-8">
+</head>
+<body>
+<div id="taquin" class="taquin"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone-min.js"></script>
+
+<script type="text/template" id="case-template">
+    <p><%= name %></p>
+</script>
+
+<script>
+var Collection = new Backbone.Collection([
+	{name: 9, x: 0, y: 3},
+	{name: 3, x: 1, y: 3},
+	{name: 1, x: 2, y: 3},
+	{name: 4, x: 3, y: 3},
+	{name: 5, x: 0, y: 2},
+	{name: 7, x: 1, y: 2},
+	{name: 8, x: 2, y: 2},
+	{name: 12, x: 3, y: 2},
+	{name: 14, x: 0, y: 1},
+	{name: 15, x: 1, y: 1},
+	{name: 2, x: 2, y: 1},
+	{name: 6, x: 3, y: 1},
+	{name: 10, x: 0, y: 0},
+	{name: 13, x: 1, y: 0},
+	{name: 11, x: 2, y: 0}
+]);
+
+var View = Backbone.View.extend({
+	el: '#taquin',
+	collection: Collection,
+	initialize: function() {
+		this.render();
+	},
+	process: function(model) {
+		var childItemView = new ViewCase({model: model});
+		childItemView.render();
+		this.$el.append(childItemView.el);
+	},
+	render: function() {
+		_.each(this.collection.models, this.process, this);
+	}
+});
+
+var ViewCase = Backbone.View.extend({
+	className: 'case',
+	template: _.template($('#case-template').html()),
+	events: {
+		'click': 'move'
+	},
+	initialize: function() {
+		this.listenTo(this.model, 'change', this.render);
+	},
+	render: function() {
+		var x = this.model.get('x'),
+    		y = this.model.get('y'),
+    		unit = 100;
+
+    	this.$el.animate({bottom: y * unit, left: x * unit});
+		
+        this.$el.html(this.template(this.model.toJSON()));
+    },
+    move: function() {
+    	var x = this.model.get('x');
+    	var y = this.model.get('y');
+    	
+    	if (empty.y === y) {
+    		if (empty.x === x - 1 || empty.x === x + 1) {
+    			this.model.set('x', empty.x);
+    			empty.x = x;
+    		}
+    	} else if (empty.x === x) {
+    		if (empty.y === y - 1 || empty.y === y + 1) {
+    			this.model.set('y', empty.y);
+    			empty.y = y;
+    		}
+    	}
+    }
+});
+
+var empty = {x: 3, y: 0};
+var view = new View();
+
+</script>
+</body>
+</html>

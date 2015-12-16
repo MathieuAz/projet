@@ -1,0 +1,31 @@
+*{
+	box-sizing: border-box;
+}
+body{
+	width: 1800px;
+	background-color: cadetblue;
+}
+.taquin{
+	position: relative;
+	width: 408px;
+	height: 408px;
+	margin: 0 auto;
+	border: 5px solid #35454D;
+	font-size: 0;
+	background-color: #35454D;
+}
+.case{
+	position: absolute;
+	width: 98px;
+	height: 98px;
+	cursor: pointer;
+	background-color: #fff;
+}
+p{
+	width: 18px;
+    line-height: 98px;
+    margin: 0 auto;
+    padding: 0;
+    color: #35454D;
+    font-size: 26px;
+}
